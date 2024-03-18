@@ -36,7 +36,7 @@ public class ItemRegistry {
 
         MODGROUP = FabricItemGroup.builder()
                 .displayName(Text.translatable("itemGroup.corkboard.corkboardgroup"))
-                .icon(() -> new ItemStack(NOTE))
+                .icon(() -> new ItemStack(CORKBOARD_ITEM))
                 .entries(((displayContext, entries) -> {
                     entries.add(NOTE);
                     entries.add(CORKBOARD_ITEM);
