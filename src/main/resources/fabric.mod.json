@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "corkboard",
+  "version": "${version}",
+  "name": "Cork Board",
+  "description": "",
+  "authors": [],
+  "contact": {
+    "repo": "https://github.com/gummy/CorkBoard"
+  },
+  "license": "All-Rights-Reserved",
+  "icon": "assets/corkboard/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "client": [
+      "gum.corkboard.client.CorkBoardClient"
+    ],
+    "main": [
+      "gum.corkboard.main.CorkBoard"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric": "*",
+    "minecraft": "${minecraft_version}"
+  }
+}

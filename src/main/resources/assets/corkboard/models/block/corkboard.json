@@ -1,0 +1,25 @@
+{   "parent": "block/block",
+  "textures": {
+    "bottom": "corkboard:block/corkboard_texture",
+    "top": "corkboard:block/corkboard_texture",
+    "side": "corkboard:block/corkboard_texture",
+
+    "particle": "#side"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 14],
+      "to": [16, 16, 16],
+      "faces": {
+        "down":  { "texture": "#bottom", "cullface": "down" },
+        "up":    { "texture": "#top",    "cullface": "up" },
+        "north": { "texture": "#side",   "cullface": "north" },
+        "south": { "texture": "#side",   "cullface": "south" },
+        "west":  { "texture": "#side",   "cullface": "west" },
+        "east":  { "texture": "#side",   "cullface": "east" }
+      }
+    }
+  ]
+}
+
+

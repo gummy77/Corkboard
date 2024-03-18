@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "corkboard:block/corkboard", "y":   0, "uvlock": true },
+    "facing=east":  { "model": "corkboard:block/corkboard", "y":  90, "uvlock": true },
+    "facing=south": { "model": "corkboard:block/corkboard", "y": 180, "uvlock": true },
+    "facing=west":  { "model": "corkboard:block/corkboard", "y": 270, "uvlock": true }
+  }
+}

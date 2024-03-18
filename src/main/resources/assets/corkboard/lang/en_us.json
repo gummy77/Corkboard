@@ -1,0 +1,12 @@
+{
+  "itemGroup.corkboard.corkboardgroup": "Corkboard",
+
+
+  "--  items": "items --",
+  "item.corkboard.note": "Note",
+
+
+  "--  Blocks": "Blocks --",
+  "item.corkboard.corkboard_item": "Corkboard",
+  "block.corkboard.corkboard": "Corkboard"
+}
