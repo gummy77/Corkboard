@@ -1,34 +1,30 @@
 package gum.corkboard.main.block;
 
-import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import gum.corkboard.main.CorkBoard;
-import gum.corkboard.main.registries.BlockRegistry;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BlockEntityTicker;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.CampfireBlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventory;
+
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.state.property.Properties;
-import net.minecraft.state.property.Property;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ItemScatterer;
+import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import org.joml.Vector2d;
 
 public class Corkboard extends BlockWithEntity {
     public static final MapCodec<Corkboard> CODEC = RecordCodecBuilder.mapCodec((instance) -> {
@@ -54,18 +50,13 @@ public class Corkboard extends BlockWithEntity {
     @Override
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext ctx) {
         Direction dir = state.get(FACING);
-        switch(dir) {
-            case NORTH:
-                return VoxelShapes.cuboid(0.0f, 0.0f, 0.875f, 1.0f, 1.0f, 1.0f);
-            case SOUTH:
-                return VoxelShapes.cuboid(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.875f);
-            case EAST:
-                return VoxelShapes.cuboid(0.0f, 0.0f, 0.0f, 0.875f, 1.0f, 1.0f);
-            case WEST:
-                return VoxelShapes.cuboid(0.875f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
-            default:
-                return VoxelShapes.fullCube();
-        }
+        return switch (dir) {
+            case NORTH -> VoxelShapes.cuboid(0.0f, 0.0f, 0.875f, 1.0f, 1.0f, 1.0f);
+            case SOUTH -> VoxelShapes.cuboid(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.125f);
+            case EAST -> VoxelShapes.cuboid(0.0f, 0.0f, 0.0f, 0.125f, 1.0f, 1.0f);
+            case WEST -> VoxelShapes.cuboid(0.875f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+            default -> VoxelShapes.fullCube();
+        };
     }
 
     @Override
@@ -81,24 +72,67 @@ public class Corkboard extends BlockWithEntity {
             return ActionResult.SUCCESS;
         }
 
+        Vec3d itemPosition = blockPos.toCenterPos().subtract(blockHitResult.getPos());
+        double yPos = itemPosition.y;
+        double xPos = 0;
+
+        Direction dir = blockState.get(FACING);
+        switch (dir) {
+            case NORTH -> xPos = -itemPosition.x;
+            case EAST -> xPos = -itemPosition.z;
+            case WEST -> xPos = itemPosition.z;
+            case SOUTH ->  xPos = itemPosition.x;
+        }
 
         if (!player.getStackInHand(hand).isEmpty()) {
-            if (blockEntity.getStack(0).isEmpty()) {
+            if (!blockEntity.isFull()) {
+                ItemStack item = player.getStackInHand(hand).copyWithCount(1);
+                NbtCompound nbt = new NbtCompound();
+                if(item.hasNbt()) nbt.copyFrom(item.getNbt());
+                nbt.putDouble("scr_pos_y", (double)(Math.round(yPos * 16.0)) / 16);
+                nbt.putDouble("scr_pos_x", (double)(Math.round(xPos * 16.0)) / 16);
+                item.setNbt(nbt);
 
-                blockEntity.setStack(0, player.getStackInHand(hand).copy());
-                player.getStackInHand(hand).setCount(0);
+                blockEntity.addStack(item);
+                player.getStackInHand(hand).decrement(1);
 
                 world.updateListeners(blockPos, blockState, blockState, 2);
-                System.out.println("ADDED");
-
             }
         } else {
-            if (!blockEntity.getStack(0).isEmpty()) {
-                player.getInventory().offerOrDrop(blockEntity.getStack(0));
-                blockEntity.setStack(0, ItemStack.EMPTY);
+            if (!blockEntity.isEmpty()) {
+                DefaultedList<ItemStack> items = blockEntity.getItems();
+
+                int nearestStack = -1;
+                double nearestDist = 10;
+                Vector2d newPos = new Vector2d(yPos, xPos);
+                for (int i = 0; i < items.size(); i++) {
+                    ItemStack curStack = items.get(i);
+                    NbtCompound nbt = curStack.getNbt();
+                    if(nbt != null) {
+                        Vector2d curPos = new Vector2d(nbt.getDouble("scr_pos_y"), nbt.getDouble("scr_pos_x"));
+
+                        double dist = curPos.distance(newPos);
+                        if (dist <= nearestDist) {
+                            nearestDist = dist;
+                            nearestStack = i;
+                        }
+                    }
+                }
+
+                ItemStack item = blockEntity.getStack(nearestStack);
+                NbtCompound nbt = item.getNbt();
+
+                if (nbt != null) {
+                    if (nbt.contains("scr_pos_x")) {
+                        nbt.remove("scr_pos_y");
+                        nbt.remove("scr_pos_x");
+                    }
+                }
+
+                blockEntity.setStack(nearestStack, ItemStack.EMPTY);
+                player.getInventory().offerOrDrop(item);
 
                 world.updateListeners(blockPos, blockState, blockState, 2);
-                System.out.println("REMOVED");
             }
         }
 
@@ -110,16 +144,27 @@ public class Corkboard extends BlockWithEntity {
         if (state.getBlock() != newState.getBlock()) {
             BlockEntity blockEntity = world.getBlockEntity(pos);
             if (blockEntity instanceof CorkboardEntity) {
+                for (int i = 0; i < ((CorkboardEntity) blockEntity).getItems().size(); i++) {
+                    ItemStack item = ((CorkboardEntity) blockEntity).getItems().get(i);
+                    NbtCompound nbt = item.getNbt();
+                    if (nbt != null) {
+                        if (nbt.contains("scr_pos_x")) {
+                            nbt.remove("scr_pos_y");
+                            nbt.remove("scr_pos_x");
+
+                        }
+                    }
+                }
                 ItemScatterer.spawn(world, pos, (CorkboardEntity) blockEntity);
             }
             super.onStateReplaced(state, world, pos, newState, moved);
         }
     }
 
-    @Override
-    public BlockRenderType getRenderType(BlockState state) {
-        return BlockRenderType.MODEL;
-    }
+//    @Override
+//    public BlockRenderType getRenderType(BlockState state) {
+//        return BlockRenderType.INVISIBLE;
+//    }
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {

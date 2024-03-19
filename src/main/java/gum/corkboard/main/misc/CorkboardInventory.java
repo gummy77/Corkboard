@@ -68,11 +68,6 @@ public interface CorkboardInventory extends Inventory {
         return -1;
     }
 
-//    @Override
-//    default void markDirty() {
-//        // Override if you want behavior.
-//    }
-
     @Override
     default void clear() {
         getItems().clear();
