@@ -7,6 +7,7 @@ public class CorkBoard implements ModInitializer {
     public static final String MODID = "corkboard";
 
     public void onInitialize () {
+        ScreenRegistry.registerScreens();
         ItemRegistry.registerItems();
         BlockRegistry.registerBlocks();
     }

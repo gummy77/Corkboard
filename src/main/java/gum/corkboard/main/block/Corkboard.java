@@ -51,10 +51,10 @@ public class Corkboard extends BlockWithEntity {
     public VoxelShape getOutlineShape(BlockState state, BlockView world, BlockPos pos, ShapeContext ctx) {
         Direction dir = state.get(FACING);
         return switch (dir) {
-            case NORTH -> VoxelShapes.cuboid(0.0f, 0.0f, 0.875f, 1.0f, 1.0f, 1.0f);
-            case SOUTH -> VoxelShapes.cuboid(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.125f);
-            case EAST -> VoxelShapes.cuboid(0.0f, 0.0f, 0.0f, 0.125f, 1.0f, 1.0f);
-            case WEST -> VoxelShapes.cuboid(0.875f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+            case NORTH -> VoxelShapes.cuboid(0.0f, 0.0f, 0.9375f, 1.0f, 1.0f, 1.0f);
+            case SOUTH -> VoxelShapes.cuboid(0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0625f);
+            case EAST -> VoxelShapes.cuboid(0.0f, 0.0f, 0.0f, 0.0625f, 1.0f, 1.0f);
+            case WEST -> VoxelShapes.cuboid(0.9375f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f);
             default -> VoxelShapes.fullCube();
         };
     }
@@ -161,10 +161,10 @@ public class Corkboard extends BlockWithEntity {
         }
     }
 
-//    @Override
-//    public BlockRenderType getRenderType(BlockState state) {
-//        return BlockRenderType.INVISIBLE;
-//    }
+    @Override
+    public BlockRenderType getRenderType(BlockState state) {
+        return BlockRenderType.MODEL;
+    }
 
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
