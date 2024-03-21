@@ -2,41 +2,30 @@ package gum.corkboard.client.screen;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import gum.corkboard.main.CorkBoard;
+import gum.corkboard.main.registries.PacketRegistry;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.client.Keyboard;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.Drawable;
-import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
-import net.minecraft.client.gui.screen.ingame.HandledScreens;
-import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.block.entity.SignBlockEntityRenderer;
 import net.minecraft.client.util.SelectionManager;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.network.packet.c2s.play.UpdateSignC2SPacket;
-import net.minecraft.screen.ScreenTexts;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
 import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Vector3f;
-
-import java.util.Iterator;
 
 @Environment(EnvType.CLIENT)
 public class NoteScreen extends HandledScreen<NoteScreenHandler> {
     private static final Identifier TEXTURE = new Identifier(CorkBoard.MODID, "textures/gui/note.png");
-    private final String[] messages;
+    private String[] messages;
     private int currentRow;
-    private ItemStack savedStack;
     @Nullable
     private SelectionManager selectionManager;
 
@@ -44,28 +33,29 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
         super(handler, inventory, title);
         this.backgroundHeight = 100;
         this.backgroundWidth = 100;
-        savedStack = inventory.getMainHandStack();
-        NbtCompound initialNbt = savedStack.getNbt();
-        if(initialNbt != null) {
-            this.messages = new String[]{
-                    initialNbt.getString("text0"),
-                    initialNbt.getString("text1"),
-                    initialNbt.getString("text2"),
-                    initialNbt.getString("text3")};
-        }else {
-            this.messages = new String[]{"", "", "", ""};
-        }
-
+        this.messages = new String[]{"", "", "", ""};
     }
 
     @Override
     protected void init() {
+        ItemStack stack = this.client.player.getMainHandStack();
+        NbtCompound initialNbt = stack.getOrCreateSubNbt("text");
+
+        System.out.println("Stared Editing: \n" + stack.getName() + "\n" +initialNbt);
+        if(initialNbt != null) {
+            this.messages = new String[]{
+                    initialNbt.getString("0"),
+                    initialNbt.getString("1"),
+                    initialNbt.getString(""),
+                    initialNbt.getString("3")};
+        }
+
         this.selectionManager = new SelectionManager(
             () -> { return this.messages[this.currentRow]; },
             this::setCurrentRowMessage,
             SelectionManager.makeClipboardGetter(this.client),
             SelectionManager.makeClipboardSetter(this.client),
-            (string) -> { return this.client.textRenderer.getWidth(string) <= 100; }
+            (string) -> { return this.client.textRenderer.getWidth(string) <= 90; }
         );
     }
 
@@ -126,9 +116,10 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
     }
 
     private void renderSignText(DrawContext context) {
+        context.getMatrices().translate(0, -20.0F, 0);
         int j = this.selectionManager.getSelectionStart();
         int k = this.selectionManager.getSelectionEnd();
-        int l = 10;
+        int l = 15;
         int m = this.currentRow * l;
 
         int n;
@@ -171,7 +162,7 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
                     int t = this.textRenderer.getWidth(string.substring(0, r)) - this.textRenderer.getWidth(string) / 2;
                     int u = Math.min(s, t);
                     int v = Math.max(s, t);
-                    //context.fill(RenderLayer.getGuiTextHighlight(), u, m, v, m + this.blockEntity.getTextLineHeight(), -16776961);
+                    context.fill(RenderLayer.getGuiTextHighlight(), u, m, v, m + 10, -16776961);
                 }
             }
         }
@@ -180,12 +171,7 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
 
     @Override
     public void close() {
-        saveNbtText(savedStack);
         this.finishEditing();
-    }
-
-    @Override
-    public void removed() {
     }
 
     @Override
@@ -197,20 +183,31 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
         this.messages[this.currentRow] = message;
     }
 
-    private void saveNbtText (ItemStack stack){
-        NbtCompound nbt = new NbtCompound();
-        nbt.putString("text0", this.messages[0]);
-        nbt.putString("text1", this.messages[1]);
-        nbt.putString("text2", this.messages[2]);
-        nbt.putString("text3", this.messages[3]);
-        //stack.writeNbt(nbt);
-        this.handler.getSlot(0).getStack().writeNbt(nbt);
-        //this.handler.stack.writeNbt(nbt);
-        System.out.println("SAVED to: " + stack.getName());
+    private void saveNbtText (){
+        ItemStack stack = client.player.getMainHandStack();
+
+
+        //client.player.setStackInHand(client.player.getActiveHand(), stack);
+        if(this.handler.writeItemStackText(stack, this.messages)){
+            System.out.println("maybe?");
+            //this.client.player.networkHandler.sendPacket(new SetNoteNbtC2SPacket(messages));
+            PacketByteBuf buf = PacketByteBufs.create();
+            String joinedText = this.messages[0] + "*-*" +
+                    this.messages[1] + "*-*" +
+                    this.messages[2] + "*-*" +
+                    this.messages[3] + "*-*";
+
+            buf.writeString(joinedText);
+
+            ClientPlayNetworking.send(PacketRegistry.SET_NOTE_NBT_PACKET_ID, buf);
+        }
+        //this.client.player.networkHandler.sendPacket(new );
+
+        System.out.println("Finished Editing: \n"+stack.getName() + "\n" + stack.getNbt());
     }
 
     private void finishEditing() {
-        saveNbtText(savedStack);
-        this.client.setScreen((Screen)null);
+        saveNbtText();
+        super.close();
     }
 }

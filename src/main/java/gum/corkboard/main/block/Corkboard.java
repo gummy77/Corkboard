@@ -87,8 +87,10 @@ public class Corkboard extends BlockWithEntity {
         if (!player.getStackInHand(hand).isEmpty()) {
             if (!blockEntity.isFull()) {
                 ItemStack item = player.getStackInHand(hand).copyWithCount(1);
-                NbtCompound nbt = new NbtCompound();
-                if(item.hasNbt()) nbt.copyFrom(item.getNbt());
+                NbtCompound nbt = item.getNbt();
+
+                if(nbt == null) nbt = new NbtCompound();
+
                 nbt.putDouble("scr_pos_y", (double)(Math.round(yPos * 16.0)) / 16);
                 nbt.putDouble("scr_pos_x", (double)(Math.round(xPos * 16.0)) / 16);
                 item.setNbt(nbt);

@@ -7,6 +7,8 @@ import net.fabricmc.fabric.mixin.screen.ScreenAccessor;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.HandledScreens;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -25,8 +27,8 @@ public class Note extends Item{
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         if (!world.isClient) {
             ItemStack stack = user.getStackInHand(hand);
-            user.openHandledScreen(createScreenHandlerFactory(stack));
-            user.currentScreenHandler.setStackInSlot(0, 0, stack);
+            NamedScreenHandlerFactory screenHandlerFactory = createScreenHandlerFactory(stack);
+            user.openHandledScreen(screenHandlerFactory);
         }
         return TypedActionResult.success(user.getStackInHand(hand));
     }
