@@ -33,7 +33,6 @@ public class ItemRegistry {
         NOTE = register("note", new Note());
         CORKBOARD_ITEM = register("corkboard_item", new BlockItem(CORKBOARD, new FabricItemSettings()));
 
-
         MODGROUP = FabricItemGroup.builder()
                 .displayName(Text.translatable("itemGroup.corkboard.corkboardgroup"))
                 .icon(() -> new ItemStack(CORKBOARD_ITEM))

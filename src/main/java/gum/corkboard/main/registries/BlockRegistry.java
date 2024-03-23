@@ -30,6 +30,7 @@ public class BlockRegistry {
 
     static {
         CORKBOARD = register("corkboard", new Corkboard(FabricBlockSettings.create()));
+
         CORKBOARD_ENTITY = registerEntity("corkboard_entity", FabricBlockEntityTypeBuilder.create(CorkboardEntity::new, CORKBOARD).build());
     }
 }
