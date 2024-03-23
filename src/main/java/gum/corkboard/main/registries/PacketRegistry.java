@@ -17,6 +17,11 @@ public class PacketRegistry {
             String messagesString = buf.readString();
             String[] messages = messagesString.split("\n");
 
+            for(int i = 0; i < messages.length; i++){
+                if(messages[i] == ""){
+                    messages[i] = " ";
+                }
+            }
 
             //System.out.println("Recieved Update Request:\n"+stack.getName()+"\n"+messages.length+"\n"+messagesString);
 

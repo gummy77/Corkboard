@@ -9,6 +9,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.state.property.Properties;
@@ -36,7 +38,7 @@ public class Corkboard extends BlockWithEntity {
     }
 
     public Corkboard(AbstractBlock.Settings settings) {
-        super(settings);
+        super(settings.sounds(BlockSoundGroup.WOOD));
         setDefaultState(getDefaultState().with(Properties.HORIZONTAL_FACING, Direction.NORTH));
     }
 
@@ -84,6 +86,7 @@ public class Corkboard extends BlockWithEntity {
 
         if (!player.getStackInHand(hand).isEmpty()) {
             if (!blockEntity.isFull()) {
+                player.playSound(SoundEvents.ENTITY_ITEM_FRAME_ADD_ITEM, 1.0f, 1.0f);
                 ItemStack item = player.getStackInHand(hand).copyWithCount(1);
                 NbtCompound nbt = item.getNbt();
 
@@ -97,9 +100,11 @@ public class Corkboard extends BlockWithEntity {
                 player.getStackInHand(hand).decrement(1);
 
                 world.updateListeners(blockPos, blockState, blockState, 2);
+
             }
         } else {
             if (!blockEntity.isEmpty()) {
+                player.playSound(SoundEvents.ENTITY_ITEM_FRAME_REMOVE_ITEM, 1.0f, 1.0f);
                 DefaultedList<ItemStack> items = blockEntity.getItems();
 
                 int nearestStack = -1;
@@ -132,6 +137,7 @@ public class Corkboard extends BlockWithEntity {
                 blockEntity.setStack(nearestStack, ItemStack.EMPTY);
                 player.getInventory().offerOrDrop(item);
 
+
                 world.updateListeners(blockPos, blockState, blockState, 2);
             }
         }
@@ -160,6 +166,7 @@ public class Corkboard extends BlockWithEntity {
             super.onStateReplaced(state, world, pos, newState, moved);
         }
     }
+
 
     @Override
     public BlockRenderType getRenderType(BlockState state) {

@@ -50,6 +50,12 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
                     initialNbt.getString("3")};
         }
 
+        for(int i = 0; i < messages.length; i++){
+            if(messages[i] == " "){
+                messages[i] = "";
+            }
+        }
+
         this.selectionManager = new SelectionManager(
             () -> this.messages[this.currentRow],
             this::setCurrentRowMessage,

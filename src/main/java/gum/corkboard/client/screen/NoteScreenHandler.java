@@ -15,6 +15,12 @@ public class NoteScreenHandler extends ScreenHandler {
     public boolean writeItemStackText(ItemStack stack, String[] text){
         if(text != null && stack != null) {
             NbtCompound nbt = stack.getOrCreateSubNbt("text");
+            for(int i = 0; i < text.length; i++){
+                if(text[i] == ""){
+                    text[i] = " ";
+                }
+            }
+
             nbt.putString("0", text[0]);
             nbt.putString("1", text[1]);
             nbt.putString("2", text[2]);
