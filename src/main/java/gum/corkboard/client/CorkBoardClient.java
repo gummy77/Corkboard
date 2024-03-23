@@ -15,7 +15,9 @@ import net.minecraft.client.gui.screen.ingame.HandledScreens;
 public class CorkBoardClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
+        ModelLoadingPlugin.register(new gum.corkboard.client.ModelLoadingPlugin());
         BlockEntityRendererRegistry.register(BlockRegistry.CORKBOARD_ENTITY, CorkboardEntityRenderer::new);
         HandledScreens.register(ScreenRegistry.NOTE_SCREEN_HANDLER, NoteScreen::new);
+
     }
 }

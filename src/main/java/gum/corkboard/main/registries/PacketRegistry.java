@@ -14,16 +14,22 @@ public class PacketRegistry {
     public static void registerPackets(){
         ServerPlayNetworking.registerGlobalReceiver(SET_NOTE_NBT_PACKET_ID, (client, player, handler, buf, responseSender) -> {
             client.execute(() -> {
+
                 ItemStack stack = player.getStackInHand(player.getActiveHand());
-                String[] messages = buf.readString().split("~\n");
+                String messagesString = buf.readString();
+                String[] messages = messagesString.split("\n");
+
+
+                //System.out.println("Recieved Update Request:\n"+stack.getName()+"\n"+messages.length+"\n"+messagesString);
 
                 NbtCompound nbt = stack.getOrCreateSubNbt("text");
-                if (nbt == null) nbt = new NbtCompound();
-                nbt.putString("0", messages[0]);
-                nbt.putString("1", messages[1]);
-                nbt.putString("2", messages[2]);
-                nbt.putString("3", messages[3]);
-                stack.setNbt(nbt);
+                //if (nbt == null) nbt = new NbtCompound();
+                if(messages.length >= 1) nbt.putString("0", messages[0]);
+                if(messages.length >= 2) nbt.putString("1", messages[1]);
+                if(messages.length >= 3) nbt.putString("2", messages[2]);
+                if(messages.length >= 4) nbt.putString("3", messages[3]);
+
+                //System.out.println("Finished Editing Request: \n"+stack.getName() + "\n" + stack.getNbt());
             });
         });
     }

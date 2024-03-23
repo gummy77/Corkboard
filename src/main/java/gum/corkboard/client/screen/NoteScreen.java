@@ -41,12 +41,12 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
         ItemStack stack = this.client.player.getMainHandStack();
         NbtCompound initialNbt = stack.getOrCreateSubNbt("text");
 
-        System.out.println("Stared Editing: \n" + stack.getName() + "\n" +initialNbt);
+        //System.out.println("Stared Editing: \n" + stack.getName() + "\n" +initialNbt);
         if(initialNbt != null) {
             this.messages = new String[]{
                     initialNbt.getString("0"),
                     initialNbt.getString("1"),
-                    initialNbt.getString(""),
+                    initialNbt.getString("2"),
                     initialNbt.getString("3")};
         }
 
@@ -186,24 +186,20 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
     private void saveNbtText (){
         ItemStack stack = client.player.getMainHandStack();
 
-
-        //client.player.setStackInHand(client.player.getActiveHand(), stack);
         if(this.handler.writeItemStackText(stack, this.messages)){
-            System.out.println("maybe?");
-            //this.client.player.networkHandler.sendPacket(new SetNoteNbtC2SPacket(messages));
+
             PacketByteBuf buf = PacketByteBufs.create();
-            String joinedText = this.messages[0] + "*-*" +
-                    this.messages[1] + "*-*" +
-                    this.messages[2] + "*-*" +
-                    this.messages[3] + "*-*";
+            String joinedText =
+                    this.messages[0] + "\n" +
+                    this.messages[1] + "\n" +
+                    this.messages[2] + "\n" +
+                    this.messages[3] + "\n";
 
             buf.writeString(joinedText);
 
             ClientPlayNetworking.send(PacketRegistry.SET_NOTE_NBT_PACKET_ID, buf);
         }
-        //this.client.player.networkHandler.sendPacket(new );
-
-        System.out.println("Finished Editing: \n"+stack.getName() + "\n" + stack.getNbt());
+        //System.out.println("Finished Editing: \n"+stack.getName() + "\n" + stack.getNbt());
     }
 
     private void finishEditing() {
