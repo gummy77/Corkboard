@@ -1,13 +1,11 @@
 package gum.corkboard.client.screen;
 
-import gum.corkboard.main.block.Corkboard;
 import gum.corkboard.main.registries.ScreenRegistry;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.screen.*;
-import net.minecraft.text.Text;
 
 public class NoteScreenHandler extends ScreenHandler {
     public NoteScreenHandler(int syncId, PlayerInventory playerInventory) {

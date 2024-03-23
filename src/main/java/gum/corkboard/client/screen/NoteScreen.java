@@ -51,11 +51,11 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
         }
 
         this.selectionManager = new SelectionManager(
-            () -> { return this.messages[this.currentRow]; },
+            () -> this.messages[this.currentRow],
             this::setCurrentRowMessage,
             SelectionManager.makeClipboardGetter(this.client),
             SelectionManager.makeClipboardSetter(this.client),
-            (string) -> { return this.client.textRenderer.getWidth(string) <= 90; }
+            (string) -> this.client.textRenderer.getWidth(string) <= 90
         );
     }
 
@@ -85,7 +85,7 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
         }else if (this.client.options.inventoryKey.matchesKey(keyCode, scanCode)) {
             return true;
         } else if (keyCode != 264 && keyCode != 257 && keyCode != 335) {
-            return this.selectionManager.handleSpecialKey(keyCode) ? true : super.keyPressed(keyCode, scanCode, modifiers);
+            return this.selectionManager.handleSpecialKey(keyCode) || super.keyPressed(keyCode, scanCode, modifiers);
         } else {
             this.currentRow = this.currentRow + 1 & 3;
             this.selectionManager.putCursorAtEnd();
@@ -104,8 +104,6 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
         RenderSystem.setShader(GameRenderer::getPositionTexProgram);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, TEXTURE);
-        int x = (width/2) - (this.backgroundWidth/2);
-        int y = (height/2) - (this.backgroundHeight/2);
         drawContext.drawTexture(TEXTURE, -backgroundWidth/2, -backgroundHeight/2, 0, 0, backgroundWidth, backgroundHeight, backgroundWidth, backgroundHeight);
         drawContext.getMatrices().pop();
     }
@@ -137,7 +135,7 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
                 o = -this.textRenderer.getWidth(string) / 2;
                 context.drawText(this.textRenderer, string, o, n * l, Colors.BLACK, false);
                 if (n == this.currentRow && j >= 0) {
-                    p = this.textRenderer.getWidth(string.substring(0, Math.max(Math.min(j, string.length()), 0)));
+                    p = this.textRenderer.getWidth(string.substring(0, Math.min(j, string.length())));
                     q = p - this.textRenderer.getWidth(string) / 2;
                     if (j >= string.length()) {
                         context.drawText(this.textRenderer, "_", q, m, Colors.BLACK, false);
@@ -149,7 +147,7 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
         for(n = 0; n < this.messages.length; ++n) {
             string = this.messages[n];
             if (string != null && n == this.currentRow && j >= 0) {
-                o = this.textRenderer.getWidth(string.substring(0, Math.max(Math.min(j, string.length()), 0)));
+                o = this.textRenderer.getWidth(string.substring(0, Math.min(j, string.length())));
                 p = o - this.textRenderer.getWidth(string) / 2;
                 if (j < string.length()) {
                     context.fill(p, m - 1, p + 1, m + 10, -16777216 | Colors.BLACK);

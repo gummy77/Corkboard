@@ -27,9 +27,7 @@ import net.minecraft.world.World;
 import org.joml.Vector2d;
 
 public class Corkboard extends BlockWithEntity {
-    public static final MapCodec<Corkboard> CODEC = RecordCodecBuilder.mapCodec((instance) -> {
-        return instance.group(createSettingsCodec()).apply(instance, Corkboard::new);
-    });
+    public static final MapCodec<Corkboard> CODEC = RecordCodecBuilder.mapCodec((instance) -> instance.group(createSettingsCodec()).apply(instance, Corkboard::new));
     public static final DirectionProperty FACING;
 
     @Override
