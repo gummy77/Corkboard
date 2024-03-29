@@ -7,19 +7,21 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.SelectionManager;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.network.PacketByteBuf;
 import net.minecraft.text.Text;
-import net.minecraft.util.Colors;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
+
+import java.awt.*;
 
 @Environment(EnvType.CLIENT)
 public class NoteScreen extends HandledScreen<NoteScreenHandler> {
@@ -66,19 +68,20 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
     }
 
 
+
     @Override
-    public void render(DrawContext drawContext, int mouseX, int mouseY, float delta) {
-        drawContext.getMatrices().translate(-2000, 0, 0);
-        super.render(drawContext, mouseX, mouseY, delta);
-        drawContext.getMatrices().translate(2000, 0, 0);
+    public void render(MatrixStack matrixStack, int mouseX, int mouseY, float delta) {
+        matrixStack.translate(-2000, 0, 0);
+        super.render(matrixStack, mouseX, mouseY, delta);
+        matrixStack.translate(2000, 0, 0);
 
-        drawContext.getMatrices().push();
+        matrixStack.push();
 
-        this.scaleScreen(drawContext);
-        drawBackground(drawContext, delta, mouseX, mouseY);
-        this.renderSignText(drawContext);
+        this.scaleScreen(matrixStack);
+        drawBackground(matrixStack, delta, mouseX, mouseY);
+        this.renderSignText(matrixStack);
 
-        drawContext.getMatrices().pop();
+        matrixStack.pop();
     }
 
 
@@ -105,22 +108,24 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
     }
 
     @Override
-    protected void drawBackground(DrawContext drawContext, float delta, int mouseX, int mouseY) {
-        drawContext.getMatrices().push();
-        RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+    protected void drawBackground(MatrixStack matrixStack, float delta, int mouseX, int mouseY) {
+        matrixStack.push();
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         RenderSystem.setShaderTexture(0, TEXTURE);
-        drawContext.drawTexture(TEXTURE, -backgroundWidth/2, -backgroundHeight/2, 0, 0, backgroundWidth, backgroundHeight, backgroundWidth, backgroundHeight);
-        drawContext.getMatrices().pop();
+        //(TEXTURE, -backgroundWidth/2, -backgroundHeight/2, 0, 0, backgroundWidth, backgroundHeight, backgroundWidth, backgroundHeight);
+        matrixStack.pop();
     }
 
-    private void scaleScreen(DrawContext drawContext) {
-        drawContext.getMatrices().translate((float)this.width / 2.0F, 120.0F, 50.0F);
-        drawContext.getMatrices().scale(2f, 2f, 2f);
+    private void scaleScreen(MatrixStack matrixStack) {
+        matrixStack.translate((float)this.width / 2.0F, 120.0F, 50.0F);
+        matrixStack.scale(2f, 2f, 2f);
     }
 
-    private void renderSignText(DrawContext context) {
-        context.getMatrices().translate(0, -20.0F, 0);
+    private void renderSignText(MatrixStack matrixStack) {
+        matrixStack.translate(0, -20.0F, 0);
+        VertexConsumerProvider.Immediate immediate = this.client.getBufferBuilders().getEntityVertexConsumers();
+
         int j = this.selectionManager.getSelectionStart();
         int k = this.selectionManager.getSelectionEnd();
         int l = 15;
@@ -139,12 +144,12 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
                 }
 
                 o = -this.textRenderer.getWidth(string) / 2;
-                context.drawText(this.textRenderer, string, o, n * l, Colors.BLACK, false);
+                this.client.textRenderer.draw(string, o, n * l, 0, false, matrixStack.peek().getPositionMatrix(), immediate, false, 0, 15728880, false);
                 if (n == this.currentRow && j >= 0) {
                     p = this.textRenderer.getWidth(string.substring(0, Math.min(j, string.length())));
                     q = p - this.textRenderer.getWidth(string) / 2;
                     if (j >= string.length()) {
-                        context.drawText(this.textRenderer, "_", q, m, Colors.BLACK, false);
+                        this.client.textRenderer.draw("_", q, m, 0, false, matrixStack.peek().getPositionMatrix(), immediate, false, 0, 15728880, false);
                     }
                 }
             }
@@ -156,18 +161,19 @@ public class NoteScreen extends HandledScreen<NoteScreenHandler> {
                 o = this.textRenderer.getWidth(string.substring(0, Math.min(j, string.length())));
                 p = o - this.textRenderer.getWidth(string) / 2;
                 if (j < string.length()) {
-                    context.fill(p, m - 1, p + 1, m + 10, -16777216 | Colors.BLACK);
+                    fill(matrixStack, p, m - 1, p + 1, m + 10, -16777216 | 0);
+
                 }
 
-                if (k != j) {
-                    q = Math.min(j, k);
-                    int r = Math.max(j, k);
-                    int s = this.textRenderer.getWidth(string.substring(0, q)) - this.textRenderer.getWidth(string) / 2;
-                    int t = this.textRenderer.getWidth(string.substring(0, r)) - this.textRenderer.getWidth(string) / 2;
-                    int u = Math.min(s, t);
-                    int v = Math.max(s, t);
-                    context.fill(RenderLayer.getGuiTextHighlight(), u, m, v, m + 10, -16776961);
-                }
+//                if (k != j) {
+//                    q = Math.min(j, k);
+//                    int r = Math.max(j, k);
+//                    int s = this.textRenderer.getWidth(string.substring(0, q)) - this.textRenderer.getWidth(string) / 2;
+//                    int t = this.textRenderer.getWidth(string.substring(0, r)) - this.textRenderer.getWidth(string) / 2;
+//                    int u = Math.min(s, t);
+//                    int v = Math.max(s, t);
+//                    fill(RenderLayer.tex.getGuiTextHighlight(), u, m, v, m + 10, -16776961);
+//                }
             }
         }
 

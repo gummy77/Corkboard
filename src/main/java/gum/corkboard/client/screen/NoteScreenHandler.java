@@ -32,10 +32,10 @@ public class NoteScreenHandler extends ScreenHandler {
         }
     }
 
-    @Override
-    public ItemStack quickMove(PlayerEntity player, int slot) {
-        return null;
-    }
+//    @Override
+//    public ItemStack quickMove(PlayerEntity player, int slot) {
+//        return null;
+//    }
 
     @Override
     public boolean canUse(PlayerEntity player) {

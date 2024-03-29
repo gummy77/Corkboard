@@ -18,24 +18,25 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ItemScatterer;
 import net.minecraft.util.collection.DefaultedList;
+import net.minecraft.util.dynamic.Codecs;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import org.joml.Vector2d;
 
 public class Corkboard extends BlockWithEntity {
-    public static final MapCodec<Corkboard> CODEC = RecordCodecBuilder.mapCodec((instance) -> instance.group(createSettingsCodec()).apply(instance, Corkboard::new));
+    //public static final MapCodec<Corkboard> CODEC = RecordCodecBuilder.mapCodec((instance) -> instance.group(Codecs.()).apply(instance, Corkboard::new));
     public static final DirectionProperty FACING;
 
-    @Override
-    protected MapCodec<? extends BlockWithEntity> getCodec() {
-        return CODEC;
-    }
+//    @Override
+//    protected MapCodec<? extends BlockWithEntity> getCodec() {
+//        return CODEC;
+//    }
 
     public Corkboard(AbstractBlock.Settings settings) {
         super(settings.sounds(BlockSoundGroup.WOOD));
@@ -61,7 +62,7 @@ public class Corkboard extends BlockWithEntity {
 
     @Override
     public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return super.getPlacementState(ctx).with(Properties.HORIZONTAL_FACING, ctx.getHorizontalPlayerFacing().getOpposite());
+        return super.getPlacementState(ctx).with(Properties.HORIZONTAL_FACING, ctx.getPlayerFacing());
     }
 
     @Override
@@ -72,7 +73,7 @@ public class Corkboard extends BlockWithEntity {
             return ActionResult.SUCCESS;
         }
 
-        Vec3d itemPosition = blockPos.toCenterPos().subtract(blockHitResult.getPos());
+        Vec3d itemPosition = new Vec3d(blockPos.getX(), blockPos.getY(), blockPos.getZ()).subtract(blockHitResult.getPos());
         double yPos = itemPosition.y;
         double xPos = 0;
 
@@ -87,7 +88,7 @@ public class Corkboard extends BlockWithEntity {
         if (!player.getStackInHand(hand).isEmpty()) {
             if (!blockEntity.isFull()) {
                 player.playSound(SoundEvents.ENTITY_ITEM_FRAME_ADD_ITEM, 1.0f, 1.0f);
-                ItemStack item = player.getStackInHand(hand).copyWithCount(1);
+                ItemStack item = player.getStackInHand(hand).copy();
                 NbtCompound nbt = item.getNbt();
 
                 if(nbt == null) nbt = new NbtCompound();
@@ -109,14 +110,14 @@ public class Corkboard extends BlockWithEntity {
 
                 int nearestStack = -1;
                 double nearestDist = 10;
-                Vector2d newPos = new Vector2d(yPos, xPos);
+                Vec2f newPos = new Vec2f((float)yPos, (float)xPos);
                 for (int i = 0; i < items.size(); i++) {
                     ItemStack curStack = items.get(i);
                     NbtCompound nbt = curStack.getNbt();
                     if(nbt != null) {
-                        Vector2d curPos = new Vector2d(nbt.getDouble("scr_pos_y"), nbt.getDouble("scr_pos_x"));
+                        Vec2f curPos = new Vec2f((float)nbt.getDouble("scr_pos_y"), (float)nbt.getDouble("scr_pos_x"));
 
-                        double dist = curPos.distance(newPos);
+                        double dist = curPos.distanceSquared(newPos);
                         if (dist <= nearestDist) {
                             nearestDist = dist;
                             nearestStack = i;

@@ -3,8 +3,8 @@
   "id": "corkboard",
   "version": "${version}",
   "name": "Cork Board",
-  "description": "",
-  "authors": [],
+  "description": "A simple notetaking mod",
+  "authors": ["gummy"],
   "contact": {
     "repo": "https://github.com/gummy/CorkBoard"
   },
